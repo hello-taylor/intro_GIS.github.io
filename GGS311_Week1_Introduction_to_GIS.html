@@ -257,6 +257,21 @@
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   .print-only{display:none}
+
+  /* ---------- lightbox (click to enlarge) ---------- */
+  figure img,img.miniphoto{cursor:zoom-in}
+  .lightbox{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
+    background:rgba(12,20,28,.88);backdrop-filter:blur(5px);padding:28px;cursor:zoom-out;animation:lbfade .18s ease}
+  .lightbox.open{display:flex}
+  @keyframes lbfade{from{opacity:0}to{opacity:1}}
+  .lightbox figure{margin:0;background:transparent;border:0;box-shadow:none;display:flex;flex-direction:column;align-items:center;max-width:94vw}
+  .lightbox img{max-width:94vw;max-height:84vh;width:auto;height:auto;border-radius:10px;background:#fff;box-shadow:0 24px 70px rgba(0,0,0,.55);cursor:zoom-out}
+  .lightbox figcaption{color:#dbe7ee;font-size:14px;line-height:1.5;margin-top:16px;max-width:760px;text-align:center;background:transparent;border:0;padding:0}
+  .lightbox figcaption b{color:#fff}.lightbox figcaption a{color:#7fd3d9}
+  .lbclose{position:fixed;top:16px;right:20px;width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;
+    background:rgba(255,255,255,.15);color:#fff;font-size:24px;line-height:1;display:grid;place-items:center}
+  .lbclose:hover{background:rgba(255,255,255,.28)}
+  .lbhint{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#8fa6ba;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em}
 </style>
 </head>
 <body>
@@ -663,5 +678,22 @@ const obs=new IntersectionObserver(es=>{
 },{rootMargin:'-45% 0px -50% 0px'});
 sections.forEach(s=>obs.observe(s));
 </script>
+<script>
+/* lightbox: click any figure to enlarge */
+(function(){
+  const lb=document.createElement('div');lb.className='lightbox';
+  lb.innerHTML='<button class="lbclose" aria-label="Close">\u00D7</button><figure><img alt=""><figcaption></figcaption></figure><div class="lbhint">Click anywhere or press Esc to close</div>';
+  document.body.appendChild(lb);
+  const limg=lb.querySelector('img'),lcap=lb.querySelector('figcaption');
+  function openLb(img){const fig=img.closest('figure');const cap=fig?fig.querySelector('figcaption'):null;
+    limg.src=img.currentSrc||img.src;limg.alt=img.alt||'';lcap.innerHTML=cap?cap.innerHTML:'';
+    lb.classList.add('open');document.body.style.overflow='hidden';}
+  function closeLb(){lb.classList.remove('open');document.body.style.overflow='';limg.removeAttribute('src');}
+  document.querySelectorAll('figure img,img.miniphoto').forEach(img=>img.addEventListener('click',()=>openLb(img)));
+  lb.addEventListener('click',closeLb);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lb.classList.contains('open'))closeLb();});
+})();
+</script>
+
 </body>
 </html>
