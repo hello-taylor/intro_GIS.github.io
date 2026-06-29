@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction to GIS · Lecture Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#13212f;--ink-soft:#3d5066;--paper:#eef1f3;--card:#ffffff;--line:#d4dbe1;
+    --water:#0e7c86;--water-d:#0a5e66;--terrain:#c75b27;--land:#5c8a4a;--choro:#b5306e;--gold:#caa23b;
+    --shadow:0 1px 2px rgba(19,33,47,.06),0 8px 28px rgba(19,33,47,.10);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;font-family:"Inter",system-ui,sans-serif;color:var(--ink);background:var(--paper);
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:46px 46px;background-position:-1px -1px;line-height:1.55;
+  }
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
+    radial-gradient(120% 80% at 82% -12%,rgba(14,124,134,.08),transparent 60%),
+    radial-gradient(100% 70% at -10% 112%,rgba(199,91,39,.07),transparent 55%);}
+  .page{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:54px 30px 110px}
+
+  /* hero */
+  header.hero{margin-bottom:40px}
+  .eyebrow{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--terrain);font-weight:700}
+  h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(34px,6vw,60px);
+    line-height:1.02;letter-spacing:-.025em;margin:.18em 0 .12em}
+  h1 em{font-style:normal;color:var(--water-d)}
+  .sub{font-size:18px;color:var(--ink-soft);max-width:60ch;margin:.2em 0 0}
+  .meta{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin-top:24px;
+    font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-soft)}
+  .meta .dot{color:var(--line)}
+  .progwrap{margin-top:20px;max-width:420px}
+  .progwrap .lab{display:flex;justify-content:space-between;font-family:"Space Mono",monospace;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+  .bar{height:7px;background:#dce3e8;border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--water),var(--land));border-radius:99px;transition:width .9s ease}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:18px;margin-top:8px}
+  .card{
+    position:relative;background:var(--card);border:1px solid var(--line);border-radius:15px;
+    padding:22px 22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;
+    min-height:182px;text-decoration:none;color:inherit;transition:transform .18s,box-shadow .18s,border-color .18s;
+    overflow:hidden;
+  }
+  .card .wk{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--water-d);font-weight:700}
+  .card .date{font-family:"Space Mono",monospace;font-size:11.5px;color:var(--ink-soft)}
+  .card h2{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:21px;line-height:1.14;
+    letter-spacing:-.01em;margin:8px 0 0}
+  .card .foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:16px}
+  .pill{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    font-weight:700;padding:4px 10px;border-radius:99px}
+  .pill.ready{background:#dff0d7;color:#3f6b30}
+  .pill.soon{background:#eef2f5;color:#5d7186}
+  .pill.gap{background:#f4ece0;color:#8a6a1c}
+  .go{font-family:"Space Mono",monospace;font-size:12px;color:var(--water-d);font-weight:700;opacity:0;transition:.18s}
+
+  /* ready card is a link */
+  a.card{cursor:pointer}
+  a.card::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;
+    background:radial-gradient(circle,rgba(14,124,134,.10),transparent 70%);}
+  a.card:hover{transform:translateY(-4px);box-shadow:0 6px 16px rgba(19,33,47,.10),0 18px 40px rgba(19,33,47,.14);border-color:#a9d6da}
+  a.card:hover .go{opacity:1}
+  a.card:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  /* placeholder / gap */
+  .card.soon{border-style:dashed;background:repeating-linear-gradient(135deg,#fbfcfd,#fbfcfd 9px,#f6f8fa 9px,#f6f8fa 18px)}
+  .card.soon h2{color:var(--ink-soft)}
+  .card.soon .file{font-family:"Space Mono",monospace;font-size:10.5px;color:#9aa8b3;word-break:break-all;margin-top:7px;line-height:1.4}
+  .card.gap{min-height:140px;background:#f3f5f7;border-style:dashed}
+  .card.gap h2{font-size:18px;color:var(--ink-soft)}
+  .card.gap .note{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+
+  footer{margin-top:46px;font-family:"Space Mono",monospace;font-size:12px;color:var(--ink-soft);
+    border-top:1px solid var(--line);padding-top:18px;line-height:1.7}
+  footer b{color:var(--ink)}
+
+  @media(max-width:560px){.page{padding:36px 18px 80px}.grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:400px){.grid{grid-template-columns:1fr}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">GGS 311 · GMU Geography &amp; Geoinformation Science</div>
+    <h1>Introduction to GIS <em>Lecture Notes</em></h1>
+    <p class="sub">Weekly interactive modules &mdash; brainstorms, breakout activities, and figures, built from the course notes. Pick a week to begin.</p>
+    <div class="meta">
+      <span>WEEKLY MODULES</span><span class="dot">·</span>
+      <span id="readyline">1 OF 11 LIVE</span>
+    </div>
+    <div class="progwrap">
+      <div class="lab"><span>Build progress</span><span id="pct">9%</span></div>
+      <div class="bar"><i id="bar" style="width:0"></i></div>
+    </div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+</div>
+
+<script>
+const weeks=[
+  {n:1, t:"Introduction to GIS",            file:"GGS311_Week1_Introduction_to_GIS.html", ready:true},
+  {n:2, t:"Data Models",                    file:"GGS311_Week2_Data_Models.html"},
+  {n:3, t:"Geodesy & Projections",          file:"GGS311_Week3_Geodesy_and_Projections.html"},
+  {n:4, t:"Cartography",                     file:"GGS311_Week4_Cartography.html"},
+  {n:5, t:"Data Collection",                file:"GGS311_Week5_Data_Collection.html"},
+  {n:6, t:"Databases",                      file:"GGS311_Week6_Databases.html"},
+  {n:7, t:"Spatial Analysis",               file:"GGS311_Week7_Spatial_Analysis.html"},
+  {n:8, t:"Dissolve, Proximity & Overlay",  file:"GGS311_Week8_Dissolve_Proximity_and_Overlay.html"},
+  {n:9, t:"Raster Spatial Analysis",        file:"GGS311_Week9_Raster_Spatial_Analysis.html"},
+  {n:10,t:"Interpolation",                  file:"GGS311_Week10_Interpolation.html"},
+  {n:11,t:"Cartographic Modeling",          file:"GGS311_Week11_Cartographic_Modeling.html"},
+];
+const grid=document.getElementById('grid');
+const wk2=n=>String(n).padStart(2,'0');
+weeks.forEach(w=>{
+  if(w.ready){
+    const a=document.createElement('a');a.className='card';a.href=w.file;
+    a.innerHTML=`<span class="wk">Week ${wk2(w.n)}</span>
+      <h2>${w.t}</h2>
+      <div class="foot"><span class="pill ready">Ready</span><span class="go">Open &rarr;</span></div>`;
+    grid.appendChild(a);return;
+  }
+  const el=document.createElement('div');el.className='card soon';
+  el.innerHTML=`<span class="wk">Week ${wk2(w.n)}</span>
+    <h2>${w.t}</h2><div class="file">${w.file}</div>
+    <div class="foot"><span class="pill soon">Coming soon</span></div>`;
+  grid.appendChild(el);
+});
+
+// progress
+const ready=weeks.filter(w=>w.ready).length;
+const pct=Math.round(ready/weeks.length*100);
+document.getElementById('readyline').textContent=`${ready} OF ${weeks.length} LIVE`;
+document.getElementById('pct').textContent=pct+'%';
+requestAnimationFrame(()=>{document.getElementById('bar').style.width=pct+'%';});
+</script>
+</body>
+</html>
