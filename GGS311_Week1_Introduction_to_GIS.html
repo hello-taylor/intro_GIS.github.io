@@ -53,22 +53,28 @@
   }
   .brand{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.18em;
     text-transform:uppercase;color:#7fd3d9}
+  .backlink{display:inline-flex;align-items:center;gap:7px;font-family:"Space Mono",monospace;
+    font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8fa6ba;text-decoration:none;
+    padding:6px 10px;margin:0 0 18px -10px;border-radius:8px;transition:.15s}
+  .backlink:hover{background:#1d3346;color:#fff}
+  .backlink span{font-size:14px;transition:transform .15s}
+  .backlink:hover span{transform:translateX(-3px)}
   .brand b{display:block;font-family:"Space Grotesk",sans-serif;font-weight:700;
     font-size:20px;letter-spacing:-.01em;color:#fff;text-transform:none;margin-top:6px;line-height:1.15}
   .date{font-family:"Space Mono",monospace;font-size:11px;color:#5f7790;margin-top:10px}
   .layers-h{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.2em;
     text-transform:uppercase;color:#5f7790;margin:30px 0 10px}
   .layers ol{list-style:none;margin:0;padding:0;counter-reset:lyr}
-  .layers a{
+  .layers ol a{
     counter-increment:lyr;display:flex;gap:11px;align-items:baseline;
     padding:9px 11px;border-radius:9px;color:#b9cad7;text-decoration:none;
     font-size:13.5px;font-weight:500;transition:.16s;border:1px solid transparent;
   }
-  .layers a::before{content:counter(lyr,decimal-leading-zero);
+  .layers ol a::before{content:counter(lyr,decimal-leading-zero);
     font-family:"Space Mono",monospace;font-size:11px;color:#5f7790;min-width:20px}
-  .layers a:hover{background:#1d3346;color:#fff}
-  .layers a.active{background:#0e7c86;border-color:#13a3b0;color:#fff;box-shadow:0 4px 14px rgba(14,124,134,.4)}
-  .layers a.active::before{color:#bfeef1}
+  .layers ol a:hover{background:#1d3346;color:#fff}
+  .layers ol a.active{background:#0e7c86;border-color:#13a3b0;color:#fff;box-shadow:0 4px 14px rgba(14,124,134,.4)}
+  .layers ol a.active::before{color:#bfeef1}
 
   main{min-width:0}
   /* readout / progress bar */
@@ -257,6 +263,7 @@
 <div class="shell">
   <!-- ============ LAYERS NAV ============ -->
   <nav class="layers">
+    <a class="backlink" href="index.html"><span>&larr;</span> All lecture notes</a>
     <div class="brand">GGS 311 · Intro to GIS<b>Week 1<br>Introduction to GIS</b></div>
     <div class="layers-h">Lesson stops</div>
     <ol id="nav">
