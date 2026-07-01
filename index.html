@@ -115,15 +115,24 @@ const weeks=[
   {n:4, t:"Cartography",                     file:"GGS311_Week4_Cartography.html", ready:true},
   {n:5, t:"Data Collection",                file:"GGS311_Week5_Data_Collection.html", ready:true},
   {n:6, t:"Databases",                      file:"GGS311_Week6_Databases.html", ready:true},
-  {n:7, t:"Spatial Analysis",               file:"GGS311_Week7_Spatial_Analysis.html", ready:true},
-  {n:8, t:"Dissolve, Proximity & Overlay",  file:"GGS311_Week8_Dissolve_Proximity_and_Overlay.html"},
-  {n:9, t:"Raster Spatial Analysis",        file:"GGS311_Week9_Raster_Spatial_Analysis.html"},
-  {n:10,t:"Interpolation",                  file:"GGS311_Week10_Interpolation.html"},
-  {n:11,t:"Cartographic Modeling",          file:"GGS311_Week11_Cartographic_Modeling.html"},
+  {n:7, t:"Review & Midterm",               review:true},
+  {n:8, t:"Spatial Analysis",               file:"GGS311_Week8_Spatial_Analysis.html", ready:true},
+  {n:9, t:"Dissolve, Proximity & Overlay",  file:"GGS311_Week9_Dissolve_Proximity_and_Overlay.html"},
+  {n:10,t:"Raster Spatial Analysis",        file:"GGS311_Week10_Raster_Spatial_Analysis.html"},
+  {n:11,t:"Interpolation",                  file:"GGS311_Week11_Interpolation.html"},
+  {n:12,t:"Cartographic Modeling",          file:"GGS311_Week12_Cartographic_Modeling.html"},
 ];
 const grid=document.getElementById('grid');
 const wk2=n=>String(n).padStart(2,'0');
 weeks.forEach(w=>{
+  if(w.review){
+    const el=document.createElement('div');el.className='card gap';
+    el.innerHTML=`<span class="wk">Week ${wk2(w.n)}</span>
+      <h2>${w.t}</h2>
+      <div class="note">No lecture module &mdash; review &amp; midterm week.</div>
+      <div class="foot"><span class="pill gap">Midterm</span></div>`;
+    grid.appendChild(el);return;
+  }
   if(w.ready){
     const a=document.createElement('a');a.className='card';a.href=w.file;
     a.innerHTML=`<span class="wk">Week ${wk2(w.n)}</span>
@@ -138,10 +147,11 @@ weeks.forEach(w=>{
   grid.appendChild(el);
 });
 
-// progress
-const ready=weeks.filter(w=>w.ready).length;
-const pct=Math.round(ready/weeks.length*100);
-document.getElementById('readyline').textContent=`${ready} OF ${weeks.length} LIVE`;
+// progress (lecture modules only — the review week isn't a module)
+const lectures=weeks.filter(w=>!w.review);
+const ready=lectures.filter(w=>w.ready).length;
+const pct=Math.round(ready/lectures.length*100);
+document.getElementById('readyline').textContent=`${ready} OF ${lectures.length} LIVE`;
 document.getElementById('pct').textContent=pct+'%';
 requestAnimationFrame(()=>{document.getElementById('bar').style.width=pct+'%';});
 </script>
