@@ -1,0 +1,43 @@
+# Deploys the static site (plain HTML) to GitHub Pages via GitHub Actions.
+# This replaces the legacy "Deploy from a branch" path that was timing out.
+name: Deploy static site to Pages
+
+on:
+  # Run on every push to main
+  push:
+    branches: [main]
+  # Allow manually re-running from the Actions tab (Run workflow button)
+  workflow_dispatch:
+
+# Permissions the deploy needs
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; don't cancel a run that's mid-publish
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .        # the whole repo root (index.html + week files)
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
