@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GGS 311 · Overlay Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#13212f;--ink-soft:#3d5066;--paper:#eef1f3;--card:#ffffff;--line:#d4dbe1;
+    --water:#0e7c86;--water-d:#0a5e66;--terrain:#c75b27;--terrain-d:#a8481c;--land:#5c8a4a;--land-d:#3f6b30;--gold:#caa23b;
+    --shadow:0 1px 2px rgba(19,33,47,.06),0 8px 28px rgba(19,33,47,.10);--radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Inter",system-ui,sans-serif;color:var(--ink);background:var(--paper);line-height:1.55;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:46px 46px;background-position:-1px -1px;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
+    radial-gradient(120% 80% at 82% -12%,rgba(14,124,134,.07),transparent 60%),
+    radial-gradient(100% 70% at -10% 112%,rgba(199,91,39,.06),transparent 55%);}
+  .wrap{position:relative;z-index:1;max-width:840px;margin:0 auto;padding:40px 24px 90px}
+  section.slide{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:36px 40px;position:relative;overflow:hidden}
+  section.slide::before{content:attr(data-tag);position:absolute;top:0;left:0;font-family:"Space Mono",monospace;font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;background:var(--ink);color:#cfe9eb;padding:5px 14px 5px 40px;border-bottom-right-radius:12px}
+  h2{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:25px;letter-spacing:-.01em;margin:.3em 0 .4em}
+  h3{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:16px;margin:1.3em 0 .3em}
+  p{margin:.6em 0}
+  .lead{color:var(--ink-soft)}
+  b.kA{color:var(--water-d)} b.kB{color:var(--terrain-d)}
+
+  /* ---- stage ---- */
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 6px}
+  @media(max-width:620px){.stage{grid-template-columns:1fr}}
+  .panel{border:1px solid var(--line);border-radius:12px;background:#fafcfc;overflow:hidden}
+  .phdr{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);
+    background:#f1f4f6;border-bottom:1px solid var(--line);padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
+  .phdr .op{color:var(--land-d);font-weight:700}
+  .panel svg{display:block;width:100%;height:auto;background:
+    linear-gradient(rgba(212,219,225,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(212,219,225,.5) 1px,transparent 1px);
+    background-size:20px 20px}
+  .legend{padding:11px 13px;font-size:12.5px;color:var(--ink-soft);border-top:1px solid var(--line);background:#fff}
+  .legrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:3px 0}
+  .sw{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.15)}
+  .swA{background:rgba(14,124,134,.5)} .swB{background:rgba(199,91,39,.5)} .swO{background:rgba(92,138,74,.92)}
+  .chip{font-family:"Space Mono",monospace;font-size:10.5px;padding:2px 7px;border-radius:6px;white-space:nowrap}
+  .chipA{background:#e0f0f1;color:var(--water-d)} .chipB{background:#f7e6dc;color:var(--terrain-d)}
+  .lname{font-weight:700;color:var(--ink)}
+
+  /* ---- operation buttons ---- */
+  .ops{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 4px}
+  .ops button{font-family:inherit;cursor:pointer;border:1.5px solid var(--line);background:#fff;border-radius:10px;
+    padding:11px 17px;font-size:14px;font-weight:600;color:var(--ink);transition:.14s}
+  .ops button:hover{border-color:var(--water);color:var(--water-d)}
+  .ops button.on{background:var(--water);border-color:var(--water);color:#fff;box-shadow:0 3px 10px rgba(14,124,134,.28)}
+  .ops button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  /* ---- direction row ---- */
+  .dir{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px;padding:12px 14px;
+    border:1px dashed var(--terrain);background:#fdf4ee;border-radius:11px;font-size:13.5px}
+  .dir.show{display:flex}
+  .dir b{color:var(--terrain-d)}
+  .dir .dnote{font-family:"Space Mono",monospace;font-size:11px;color:var(--ink-soft)}
+
+  /* ---- predict ---- */
+  .predict{display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:16px;animation:rise .35s ease}
+  .predict.show{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .pql{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:15px;margin:0 0 9px}
+  .pql .step{font-family:"Space Mono",monospace;font-size:11px;color:var(--terrain);letter-spacing:.1em;margin-right:8px}
+  .shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+  @media(max-width:520px){.shapes{grid-template-columns:1fr 1fr}}
+  .shp{cursor:pointer;border:2px solid var(--line);border-radius:11px;background:#fff;padding:7px 7px 5px;transition:.14s;position:relative}
+  .shp:hover{border-color:var(--land)}
+  .shp.sel{border-color:var(--land);box-shadow:0 4px 14px rgba(92,138,74,.28)}
+  .shp svg{display:block;width:100%;height:auto}
+  .shp .num{position:absolute;top:6px;left:6px;font-family:"Space Mono",monospace;font-size:10px;font-weight:700;
+    color:var(--ink-soft);background:#eef2f5;border-radius:5px;padding:1px 6px}
+  .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{font-family:inherit;cursor:pointer;border:0;background:#fff;padding:10px 18px;font-size:13.5px;font-weight:600;
+    color:var(--ink);border-right:1px solid var(--line);transition:.14s}
+  .seg button:last-child{border-right:0}
+  .seg button:hover{background:#f0f8f8}
+  .seg button.sel{background:var(--land);color:#fff}
+  .revrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px}
+  .revbtn{font-family:inherit;cursor:pointer;border:none;border-radius:10px;padding:12px 22px;font-size:14.5px;font-weight:700;
+    background:var(--land);color:#fff;box-shadow:0 3px 10px rgba(92,138,74,.3);transition:.14s}
+  .revbtn:hover{background:var(--land-d);transform:translateY(-1px)}
+  .revbtn:disabled{background:#c3ccd3;color:#eef1f3;cursor:not-allowed;box-shadow:none;transform:none}
+  .hint{font-family:"Space Mono",monospace;font-size:11.5px;color:var(--terrain-d)}
+
+  /* ---- result ---- */
+  .result{display:none;margin-top:20px;border-top:1px solid var(--line);padding-top:18px;animation:rise .4s ease}
+  .result.show{display:block}
+  .scorecard{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .score{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:13.5px;background:#fafcfc}
+  .score .tick{font-weight:700;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px;flex:none}
+  .tick.ok{background:var(--land)} .tick.no{background:var(--terrain)}
+  .score .lab{color:var(--ink-soft)} .score b{color:var(--ink)}
+  table.attr{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:13px;font-family:"Space Mono",monospace}
+  table.attr th{text-align:left;padding:8px 10px;font-weight:700;font-size:11px;letter-spacing:.02em}
+  table.attr th.fA{background:#e0f0f1;color:var(--water-d)} table.attr th.fB{background:#f7e6dc;color:var(--terrain-d)}
+  table.attr th:first-child{border-top-left-radius:8px} table.attr th:last-child{border-top-right-radius:8px}
+  table.attr td{border:1px solid var(--line);padding:8px 10px}
+  table.attr td.null{color:#9aa8b3;font-style:italic;background:
+    repeating-linear-gradient(135deg,#f6f8fa,#f6f8fa 5px,#eef2f5 5px,#eef2f5 10px)}
+  .explain{border-left:4px solid var(--water);background:#f0f8f8;padding:13px 16px;border-radius:0 10px 10px 0;margin:14px 0 4px;font-size:14px}
+  .explain .k{font-family:"Space Grotesk",sans-serif;font-weight:600;color:var(--water-d)}
+  .callout{border:2px dashed var(--gold);background:#fdf9ef;border-radius:11px;padding:13px 16px;margin:12px 0 2px;font-size:13.7px}
+  .callout b{color:#8a6a1c}
+  .again{font-family:inherit;cursor:pointer;border:1.5px solid var(--water);background:#fff;color:var(--water-d);
+    border-radius:10px;padding:9px 16px;font-size:13.5px;font-weight:600;margin-top:6px}
+  .again:hover{background:#eaf6f6}
+  .tasktag{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--terrain);font-weight:700}
+
+  /* attribute hover tooltip */
+  .tip{position:fixed;z-index:60;display:none;pointer-events:none;background:#13212f;color:#eaf1f5;
+    border-radius:10px;padding:10px 12px;box-shadow:0 12px 34px rgba(0,0,0,.4);max-width:240px}
+  .tip .tipttl{font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#7fd3d9;margin-bottom:7px}
+  .tip table{border-collapse:collapse;font-family:"Space Mono",monospace;font-size:11.5px}
+  .tip td{padding:2px 0}
+  .tip td:first-child{padding-right:12px;font-weight:700}
+  .tip td.fa{color:#7fd3d9} .tip td.fb{color:#f0b48c}
+  .tip td.nv{color:#8fa6ba;font-style:italic}
+  .oreg{transition:filter .1s}
+  .hoverhint{font-size:11.5px;color:var(--ink-soft);margin-top:6px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="slide" data-tag="Interactive · Overlay Sandbox">
+    <div class="tasktag">Predict &rarr; reveal</div>
+    <h2>Overlay sandbox: Clip &middot; Intersect &middot; Union &middot; Erase</h2>
+    <p class="lead">Two layers overlap: <b class="kA">Layer&nbsp;A &mdash; Parcels</b> (a polygon) and <b class="kB">Layer&nbsp;B &mdash; Study&nbsp;area</b> (a polygon). Pick an operation, <b>predict</b> the output <b>shape</b> and which <b>attributes</b> survive, then reveal. Watch what stays the same &mdash; and what changes &mdash; between the four tools.</p>
+
+    <div class="stage">
+      <div class="panel">
+        <div class="phdr"><span>Inputs</span></div>
+        <svg id="inSvg" viewBox="0 0 300 220" aria-label="Two overlapping input layers"></svg>
+        <div class="legend">
+          <div class="legrow"><span class="sw swA"></span><span class="lname">A &middot; Parcels</span>
+            <span class="chip chipA">parcel_id</span><span class="chip chipA">zoning</span></div>
+          <div class="legrow"><span class="sw swB"></span><span class="lname">B &middot; Study area</span>
+            <span class="chip chipB">site_id</span><span class="chip chipB">priority</span></div>
+          <div class="hoverhint">Hover a layer to inspect its attributes.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="phdr"><span>Output</span><span class="op" id="outOp"></span></div>
+        <svg id="outSvg" viewBox="0 0 300 220" aria-label="Operation output"></svg>
+        <div class="legend" id="outLegend">Pick an operation below to begin.</div>
+      </div>
+    </div>
+
+    <div class="ops" id="ops">
+      <button data-op="clip">Clip</button>
+      <button data-op="intersect">Intersect</button>
+      <button data-op="union">Union</button>
+      <button data-op="erase">Erase</button>
+    </div>
+
+    <div class="dir" id="dir">
+      <span id="dirStmt"></span>
+      <span class="dnote" id="dirNote"></span>
+    </div>
+
+    <div class="predict" id="predict">
+      <div class="pql"><span class="step">Predict 1</span>Which shape is the output?</div>
+      <div class="shapes" id="shapes"></div>
+      <div class="pql"><span class="step">Predict 2</span>Which attributes does the output carry?</div>
+      <div class="seg" id="seg">
+        <button data-attr="A">A only</button>
+        <button data-attr="B">B only</button>
+        <button data-attr="both">Both</button>
+      </div>
+      <div class="revrow">
+        <button class="revbtn" id="revealBtn" disabled>Reveal result</button>
+        <span class="hint" id="hint"></span>
+      </div>
+    </div>
+
+    <div class="result" id="result"></div>
+  </section>
+</div>
+
+<div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+(function(){
+  const R={x:30,y:45,w:150,h:120}, C={cx:190,cy:110,r:70};
+  let uid=0;
+  // Returns inner SVG markup for a result geometry. keys: overlap | all | AminusB | BminusA
+  function geom(key,{ref=true}={}){
+    const id=++uid, G='#5c8a4a', S='#3f6b30';
+    const refL = ref ? `<rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="none" stroke="#b8c2cb" stroke-width="1.4" stroke-dasharray="4 4"/><circle cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="none" stroke="#b8c2cb" stroke-width="1.4" stroke-dasharray="4 4"/>` : '';
+    let defs='', body='';
+    if(key==='overlap'){
+      defs=`<clipPath id="cc${id}"><circle cx="${C.cx}" cy="${C.cy}" r="${C.r}"/></clipPath>`;
+      body=`<g clip-path="url(#cc${id})"><rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="${G}"/></g>`
+          +`<path d="${lensPath()}" fill="none" stroke="${S}" stroke-width="2"/>`;
+    } else if(key==='all'){
+      defs=`<mask id="mu${id}"><rect x="0" y="0" width="300" height="220" fill="#000"/><rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="#fff"/><circle cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="#fff"/></mask>`;
+      body=`<rect x="0" y="0" width="300" height="220" fill="${G}" mask="url(#mu${id})"/>`
+          +`<rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="none" stroke="${S}" stroke-width="2"/>`
+          +`<circle cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="none" stroke="${S}" stroke-width="2"/>`;
+    } else if(key==='AminusB'){
+      defs=`<mask id="mb${id}"><rect x="0" y="0" width="300" height="220" fill="#fff"/><circle cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="#000"/></mask>`;
+      body=`<rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="${G}" mask="url(#mb${id})"/>`
+          +`<rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="none" stroke="${S}" stroke-width="2" mask="url(#mb${id})"/>`;
+    } else if(key==='BminusA'){
+      defs=`<mask id="mr${id}"><rect x="0" y="0" width="300" height="220" fill="#fff"/><rect x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="#000"/></mask>`;
+      body=`<circle cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="${G}" mask="url(#mr${id})"/>`
+          +`<circle cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="none" stroke="${S}" stroke-width="2" mask="url(#mr${id})"/>`;
+    }
+    return `<defs>${defs}</defs>${refL}${body}`;
+  }
+  // outline of the rect∩circle lens (rect's right edge is inside circle)
+  function lensPath(){
+    // intersection of rect [30..180]x[45..165] with circle center(190,110) r70.
+    // Right rect edge x=180 -> within circle where (180-190)^2+(y-110)^2<=70^2 -> (y-110)^2<=4800 -> y in [110-69.28,110+69.28]=[40.7,179.3]; clipped to rect y[45,165].
+    // So overlap is bounded left by circle arc, right by rect edge x=180 (y 45..165), top/bottom by rect edges where inside circle.
+    // Simplest faithful outline: the region = points in rect AND in circle. Its boundary = circle arc (left) + rect right edge (x=180) between the two intersection pts with rect top/bottom or circle.
+    // Compute where circle crosses rect top y=45: (x-190)^2=70^2-(45-110)^2=4900-4225=675 -> x=190-25.98=164.0 (left crossing). bottom y=165: same 675 -> x=164.0.
+    // Circle crosses rect right edge x=180 at y=40.7 and 179.3 (outside rect y-range), so along x=180 the whole segment y[45,165] is inside circle.
+    // Boundary (clockwise from top-left corner of lens): start (164,45) -> along rect top to (180,45) -> down rect right edge to (180,165) -> along rect bottom to (164,165) -> circle arc back up to (164,45).
+    const A=[164,45],B=[180,45],D=[180,165],E=[164,165];
+    return `M ${A[0]} ${A[1]} L ${B[0]} ${B[1]} L ${D[0]} ${D[1]} L ${E[0]} ${E[1]} A 70 70 0 0 1 ${A[0]} ${A[1]} Z`;
+  }
+
+  // Inputs illustration (static)
+  function drawInputs(){
+    document.getElementById('inSvg').innerHTML =
+      `<rect id="inA" x="${R.x}" y="${R.y}" width="${R.w}" height="${R.h}" fill="rgba(14,124,134,.42)" stroke="#0a5e66" stroke-width="2"/>`
+    + `<circle id="inB" cx="${C.cx}" cy="${C.cy}" r="${C.r}" fill="rgba(199,91,39,.42)" stroke="#a8481c" stroke-width="2"/>`
+    + `<text x="52" y="66" font-family="Space Grotesk" font-weight="700" font-size="20" fill="#0a5e66">A</text>`
+    + `<text x="232" y="118" font-family="Space Grotesk" font-weight="700" font-size="20" fill="#a8481c">B</text>`
+    + `<text x="150" y="118" font-family="Space Mono" font-size="10" fill="#5b4a2a" text-anchor="middle" opacity=".85">overlap</text>`;
+  }
+
+  const SHAPES=['overlap','all','AminusB','BminusA'];
+  function drawThumbs(){
+    const wrap=document.getElementById('shapes'); wrap.innerHTML='';
+    SHAPES.forEach((k,i)=>{
+      const d=document.createElement('div'); d.className='shp'; d.dataset.shape=k;
+      d.innerHTML=`<span class="num">${i+1}</span><svg viewBox="0 0 300 220">${geom(k)}</svg>`;
+      d.addEventListener('click',()=>{state.shapeGuess=k;paintThumbs();refreshReveal();});
+      wrap.appendChild(d);
+    });
+  }
+  function paintThumbs(){[...document.querySelectorAll('.shp')].forEach(s=>s.classList.toggle('sel',s.dataset.shape===state.shapeGuess));}
+
+  const state={op:null,dir:null,shapeGuess:null,attrGuess:null,revealed:false};
+  const Afields=[['parcel_id','P-14'],['zoning','R-1']];
+  const Bfields=[['site_id','S-3'],['priority','High']];
+
+  const CORRECT={ // by op (+dir where needed)
+    clip:{shape:'overlap'}, intersect:{shape:'overlap',attr:'both'},
+    union:{shape:'all',attr:'both'}, erase:{}
+  };
+  function correctShape(){ if(state.op==='erase') return state.dir==='A'?'AminusB':'BminusA'; if(state.op==='union') return 'all'; return 'overlap'; }
+  function correctAttr(){ if(state.op==='intersect'||state.op==='union') return 'both'; return state.dir; } // clip/erase -> dir
+
+  function selectOp(op){
+    state.op=op; state.shapeGuess=null; state.attrGuess=null; state.revealed=false;
+    if(op==='clip'||op==='erase'){ state.dir='A'; } else { state.dir=null; }
+    [...document.querySelectorAll('#ops button')].forEach(b=>b.classList.toggle('on',b.dataset.op===op));
+    // direction row (input is fixed to Layer A for clarity)
+    const dir=document.getElementById('dir');
+    if(op==='clip'||op==='erase'){
+      dir.classList.add('show');
+      document.getElementById('dirStmt').innerHTML = op==='clip'
+        ? 'Input (kept) layer: <b>A &middot; Parcels</b> &nbsp;&middot;&nbsp; clip layer: <b>B &middot; Study area</b>'
+        : 'Input (kept) layer: <b>A &middot; Parcels</b> &nbsp;&middot;&nbsp; erase layer: <b>B &middot; Study area</b>';
+      document.getElementById('dirNote').textContent = op==='clip'
+        ? 'Clip keeps the input where it falls inside the clip layer.'
+        : 'Erase keeps the input where it falls outside the erase layer.';
+    } else {
+      dir.classList.remove('show');
+    }
+    // reset predict + result
+    document.getElementById('seg').querySelectorAll('button').forEach(b=>b.classList.remove('sel'));
+    paintThumbs();
+    document.getElementById('predict').classList.add('show');
+    document.getElementById('result').classList.remove('show');
+    outPlaceholder();
+    refreshReveal();
+  }
+  function paintDir(){}
+  function refreshReveal(){
+    const ready = state.op && state.shapeGuess && state.attrGuess && (state.op==='intersect'||state.op==='union'||state.dir);
+    const btn=document.getElementById('revealBtn'); btn.disabled=!ready;
+    document.getElementById('hint').textContent = ready ? '' : 'Choose a shape and an attribute answer first.';
+  }
+
+  const OPNAME={clip:'Clip',intersect:'Intersect',union:'Union',erase:'Erase'};
+  function reveal(){
+    const cs=correctShape(), ca=correctAttr();
+    state.revealed=true; renderOutput(state.op);
+    document.getElementById('outSvg').style.cursor='help';
+    let opLabel=OPNAME[state.op];
+    if(state.op==='clip') opLabel = state.dir==='A' ? 'Clip: A by B' : 'Clip: B by A';
+    if(state.op==='erase') opLabel = state.dir==='A' ? 'Erase: A by B' : 'Erase: B by A';
+    document.getElementById('outOp').textContent=opLabel;
+    document.getElementById('outLegend').innerHTML='Green = output &middot; dashed = original layers &middot; <b>hover the output to inspect attributes</b>.';
+
+    const shapeOK = state.shapeGuess===cs, attrOK = state.attrGuess===ca;
+    const res=document.getElementById('result');
+    res.innerHTML =
+      `<div class="scorecard">
+         <div class="score"><span class="tick ${shapeOK?'ok':'no'}">${shapeOK?'\u2713':'\u2717'}</span><span class="lab">Shape &mdash; you said <b>#${SHAPES.indexOf(state.shapeGuess)+1}</b>, correct is <b>#${SHAPES.indexOf(cs)+1}</b></span></div>
+         <div class="score"><span class="tick ${attrOK?'ok':'no'}">${attrOK?'\u2713':'\u2717'}</span><span class="lab">Attributes &mdash; you said <b>${attrLabel(state.attrGuess)}</b>, correct is <b>${attrLabel(ca)}</b></span></div>
+       </div>`
+      + `<h3>Output attribute table</h3>`
+      + attrTable(state.op,state.dir)
+      + `<div class="explain"><span class="k">${opLabel}.</span> ${EXPLAIN(state.op,state.dir)}</div>`
+      + calloutFor(state.op)
+      + `<button class="again" id="againBtn">Try another combination &rarr;</button>`;
+    res.classList.add('show');
+    document.getElementById('againBtn').addEventListener('click',()=>{
+      document.getElementById('result').classList.remove('show');
+      state.shapeGuess=null;state.attrGuess=null;state.revealed=false;
+      hideTip();clearOutHi();outPlaceholder();
+      document.getElementById('seg').querySelectorAll('button').forEach(b=>b.classList.remove('sel'));
+      paintThumbs(); refreshReveal();
+      document.getElementById('predict').scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  }
+  function attrLabel(a){return a==='A'?'A only':a==='B'?'B only':'Both';}
+
+  function attrTable(op,dir){
+    const src = (op==='intersect'||op==='union') ? 'both' : dir; // A|B|both
+    const head=(fields,cls)=>fields.map(f=>`<th class="${cls}">${f[0]}</th>`).join('');
+    const cells=(fields,fill)=>fields.map(f=>fill?`<td>${f[1]}</td>`:`<td class="null">&lt;null&gt;</td>`).join('');
+    let ths='', rows='';
+    if(src==='A'){ ths=head(Afields,'fA'); rows=`<tr>${cells(Afields,true)}</tr>`; }
+    else if(src==='B'){ ths=head(Bfields,'fB'); rows=`<tr>${cells(Bfields,true)}</tr>`; }
+    else { // both
+      ths=head(Afields,'fA')+head(Bfields,'fB');
+      if(op==='intersect'){
+        rows=`<tr>${cells(Afields,true)}${cells(Bfields,true)}</tr>`;
+      } else { // union: overlap row + A-only + B-only
+        rows =`<tr>${cells(Afields,true)}${cells(Bfields,true)}</tr>`
+             +`<tr>${cells(Afields,true)}${cells(Bfields,false)}</tr>`
+             +`<tr>${cells(Afields,false)}${cells(Bfields,true)}</tr>`;
+      }
+    }
+    return `<table class="attr"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`
+      + (op==='union' ? `<p style="font-size:12.5px;color:var(--ink-soft);margin:.2em 0 0">Each output feature is one row. In areas covered by only one layer, the other layer&rsquo;s fields are <b>&lt;null&gt;</b>.</p>` : '');
+  }
+
+  function EXPLAIN(op,dir){
+    const inp = dir==='B' ? 'B (Study area)' : 'A (Parcels)';
+    const other = dir==='B' ? 'A (Parcels)' : 'B (Study area)';
+    if(op==='clip') return `Keeps the part of <b>${inp}</b> that falls <b>inside</b> ${other}. Geometry is the overlap; the output carries <b>only ${inp.split(' ')[0]}&rsquo;s attributes</b> &mdash; the clip layer contributes shape, not fields.`;
+    if(op==='intersect') return `Keeps <b>only the overlap</b>, and carries attributes from <b>both</b> layers. Notice the geometry is identical to Clip &mdash; the difference is entirely in the attribute table.`;
+    if(op==='union') return `Keeps <b>everything</b> from both layers. Overlapping areas get all fields; areas from a single layer get <b>&lt;null&gt;</b> for the missing layer.`;
+    if(op==='erase') return `Keeps the part of <b>${inp}</b> that falls <b>outside</b> ${other}. Geometry is the input minus the overlap; attributes come from <b>${inp.split(' ')[0]} only</b>.`;
+  }
+  function calloutFor(op){
+    if(op==='clip'||op==='intersect')
+      return `<div class="callout"><b>The classic mix-up:</b> Clip and Intersect return the <b>same shape</b> (the overlap). They differ only in attributes &mdash; <b>Clip</b> keeps just the input layer&rsquo;s fields, while <b>Intersect</b> keeps <b>both</b>. Choose based on whether you need the other layer&rsquo;s attributes.</div>`;
+    if(op==='erase')
+      return `<div class="callout"><b>Erase vs. Clip:</b> they are opposites. Clip keeps what&rsquo;s <b>inside</b> the boundary; Erase keeps what&rsquo;s <b>outside</b> it. Both carry only the input layer&rsquo;s attributes.</div>`;
+    if(op==='union')
+      return `<div class="callout"><b>Watch the nulls:</b> Union is the only one of the four that can leave empty attribute cells, because it keeps areas that exist in just one layer.</div>`;
+    return '';
+  }
+
+  // ---------- attribute hover system ----------
+  const AF=[['parcel_id','P-14'],['zoning','R-1']], BF=[['site_id','S-3'],['priority','High']];
+  function rowsFor(fields,cls,nullify){return fields.map(f=>`<tr><td class="${cls}">${f[0]}</td><td class="${nullify?'nv':''}">${nullify?'&lt;null&gt;':f[1]}</td></tr>`).join('');}
+  function attrCard(cfg){
+    let title='Output feature',body='';
+    if(cfg==='A'){title='A &middot; Parcels';body=rowsFor(AF,'fa',false);}
+    else if(cfg==='B'){title='B &middot; Study area';body=rowsFor(BF,'fb',false);}
+    else if(cfg==='both'){title='Both layers here';body=rowsFor(AF,'fa',false)+rowsFor(BF,'fb',false);}
+    else if(cfg==='AnullB'){title='A-only area';body=rowsFor(AF,'fa',false)+rowsFor(BF,'fb',true);}
+    else if(cfg==='BnullA'){title='B-only area';body=rowsFor(AF,'fa',true)+rowsFor(BF,'fb',false);}
+    return `<div class="tipttl">${title}</div><table>${body}</table>`;
+  }
+  const tip=document.getElementById('tip');
+  function moveTip(e){const r=tip.getBoundingClientRect(),pad=14;let x=e.clientX+pad,y=e.clientY+pad;
+    if(x+r.width>window.innerWidth-8)x=e.clientX-r.width-pad; if(y+r.height>window.innerHeight-8)y=e.clientY-r.height-pad;
+    tip.style.left=Math.max(6,x)+'px'; tip.style.top=Math.max(6,y)+'px';}
+  function showTip(html,e){tip.innerHTML=html;tip.style.display='block';moveTip(e);}
+  function hideTip(){tip.style.display='none';}
+  function vb(e,svg){const r=svg.getBoundingClientRect();return {x:(e.clientX-r.left)*300/r.width,y:(e.clientY-r.top)*220/r.height};}
+  function hitRect(x,y){return x>=30&&x<=180&&y>=45&&y<=165;}
+  function hitCirc(x,y){return (x-190)*(x-190)+(y-110)*(y-110)<=4900;}
+  function inRegionAt(x,y){const r=hitRect(x,y),c=hitCirc(x,y); if(r&&c)return 'both'; if(r)return 'A'; if(c)return 'B'; return null;}
+  function outRegionAt(x,y){const r=hitRect(x,y),c=hitCirc(x,y),op=state.op;
+    if(op==='clip')return (r&&c)?{cfg:'A',id:'r-ov'}:null;
+    if(op==='intersect')return (r&&c)?{cfg:'both',id:'r-ov'}:null;
+    if(op==='erase')return (r&&!c)?{cfg:'A',id:'r-am'}:null;
+    if(op==='union'){ if(r&&c)return{cfg:'both',id:'r-ov'}; if(r&&!c)return{cfg:'AnullB',id:'r-am'}; if(c&&!r)return{cfg:'BnullA',id:'r-bm'}; }
+    return null;}
+
+  // interactive output geometry (hit-testing done in JS, so mask rendering is fine)
+  function refDashed(){return `<rect x="30" y="45" width="150" height="120" fill="none" stroke="#b8c2cb" stroke-width="1.4" stroke-dasharray="4 4"/><circle cx="190" cy="110" r="70" fill="none" stroke="#b8c2cb" stroke-width="1.4" stroke-dasharray="4 4"/>`;}
+  function rOverlap(id){const u=++uid;return `<defs><clipPath id="c${u}"><circle cx="190" cy="110" r="70"/></clipPath></defs><g clip-path="url(#c${u})"><rect id="${id}" class="oreg" x="30" y="45" width="150" height="120" fill="#5c8a4a"/></g><path d="${lensPath()}" fill="none" stroke="#3f6b30" stroke-width="2" pointer-events="none"/>`;}
+  function rAminusB(id){const u=++uid;return `<defs><mask id="m${u}"><rect x="0" y="0" width="300" height="220" fill="#fff"/><circle cx="190" cy="110" r="70" fill="#000"/></mask></defs><rect id="${id}" class="oreg" x="30" y="45" width="150" height="120" fill="#5c8a4a" mask="url(#m${u})"/>`;}
+  function rBminusA(id){const u=++uid;return `<defs><mask id="m${u}"><rect x="0" y="0" width="300" height="220" fill="#fff"/><rect x="30" y="45" width="150" height="120" fill="#000"/></mask></defs><circle id="${id}" class="oreg" cx="190" cy="110" r="70" fill="#5c8a4a" mask="url(#m${u})"/>`;}
+  function renderOutput(op){
+    let s=refDashed();
+    if(op==='clip'||op==='intersect') s+=rOverlap('r-ov');
+    else if(op==='erase') s+=rAminusB('r-am');
+    else if(op==='union') s+=rAminusB('r-am')+rBminusA('r-bm')+rOverlap('r-ov')
+      +`<rect x="30" y="45" width="150" height="120" fill="none" stroke="#3f6b30" stroke-width="2" pointer-events="none"/><circle cx="190" cy="110" r="70" fill="none" stroke="#3f6b30" stroke-width="2" pointer-events="none"/>`;
+    document.getElementById('outSvg').innerHTML=s;
+  }
+  function clearOutHi(){['r-ov','r-am','r-bm'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.filter='';});}
+  function outPlaceholder(){
+    document.getElementById('outOp').textContent='';
+    document.getElementById('outSvg').style.cursor='default';
+    document.getElementById('outSvg').innerHTML=`<rect x="30" y="45" width="150" height="120" fill="none" stroke="#cdd6dd" stroke-width="1.4" stroke-dasharray="4 4"/><circle cx="190" cy="110" r="70" fill="none" stroke="#cdd6dd" stroke-width="1.4" stroke-dasharray="4 4"/><text x="150" y="116" font-family="Space Grotesk" font-size="34" fill="#c3ccd3" text-anchor="middle">?</text>`;
+    document.getElementById('outLegend').textContent='Make both predictions, then reveal.';
+  }
+
+  // wire up
+  drawInputs(); drawThumbs();
+  [...document.querySelectorAll('#ops button')].forEach(b=>b.addEventListener('click',()=>selectOp(b.dataset.op)));
+  document.getElementById('seg').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    state.attrGuess=b.dataset.attr;
+    document.getElementById('seg').querySelectorAll('button').forEach(x=>x.classList.toggle('sel',x===b));
+    refreshReveal();
+  }));
+  document.getElementById('revealBtn').addEventListener('click',reveal);
+
+  // hover-to-inspect
+  const inSvg=document.getElementById('inSvg'), outSvg=document.getElementById('outSvg');
+  inSvg.style.cursor='help';
+  inSvg.addEventListener('mousemove',e=>{const {x,y}=vb(e,inSvg);const reg=inRegionAt(x,y);
+    const a=document.getElementById('inA'),bEl=document.getElementById('inB');
+    if(a)a.setAttribute('stroke-width',(reg==='A'||reg==='both')?'3.4':'2');
+    if(bEl)bEl.setAttribute('stroke-width',(reg==='B'||reg==='both')?'3.4':'2');
+    if(reg)showTip(attrCard(reg),e); else hideTip();});
+  inSvg.addEventListener('mouseleave',()=>{hideTip();
+    const a=document.getElementById('inA'),bEl=document.getElementById('inB');
+    if(a)a.setAttribute('stroke-width','2'); if(bEl)bEl.setAttribute('stroke-width','2');});
+  outSvg.addEventListener('mousemove',e=>{ if(!state.revealed){hideTip();return;}
+    const {x,y}=vb(e,outSvg);const reg=outRegionAt(x,y); clearOutHi();
+    if(reg){const el=document.getElementById(reg.id);if(el)el.style.filter='brightness(1.18) saturate(1.08)';showTip(attrCard(reg.cfg),e);} else hideTip();});
+  outSvg.addEventListener('mouseleave',()=>{hideTip();clearOutHi();});
+})();
+</script>
+</body>
+</html>
