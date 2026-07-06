@@ -93,7 +93,7 @@
   <header class="hero">
     <div class="eyebrow">GGS 311 · GMU Geography &amp; Geoinformation Science</div>
     <h1>Introduction to GIS <em>Lecture Notes</em></h1>
-    <p class="sub">Weekly interactive modules &mdash; brainstorms, breakout activities, and figures, built from the course notes. Pick a week to begin.</p>
+    <p class="sub">Weekly interactive modules &mdash; brainstorms, breakout activities, and figures, built from the course notes.</p>
     <div class="meta">
       <span>WEEKLY MODULES</span><span class="dot">·</span>
       <span id="readyline">11 OF 12 LIVE</span>
@@ -119,19 +119,23 @@ const weeks=[
   {n:8, t:"Spatial Analysis",               file:"GGS311_Week8_Spatial_Analysis.html", ready:true},
   {n:9, t:"Dissolve, Proximity & Overlay",  file:"GGS311_Week9_Dissolve_Proximity_and_Overlay.html", ready:true},
   {n:10,t:"Raster Spatial Analysis",        file:"GGS311_Week10_Raster_Spatial_Analysis.html", ready:true},
-  {n:11,t:"Redistricting (Election Week)",  file:"GGS311_Week11_Redistricting.html", ready:true},
+  {n:11,t:"Redistricting (Election Week)",  file:"GGS311_Week11_Redistricting.html"},
   {n:12,t:"Interpolation",                  file:"GGS311_Week12_Interpolation.html", ready:true},
-  {n:13,t:"Cartographic Modeling",          file:"GGS311_Week13_Cartographic_Modeling.html"},
+  {n:13,t:"Cartographic Modeling",          file:"GGS311_Week13_Cartographic_Modeling.html", ready:true},
+  {n:14,t:"Final Project Introduction",     review:true, note:"No lecture module &mdash; final project introduction.", pill:"Project"},
+  {n:15,t:"Review & Final Exam",            review:true, note:"No lecture module &mdash; review &amp; final exam week.", pill:"Final Exam"},
 ];
 const grid=document.getElementById('grid');
 const wk2=n=>String(n).padStart(2,'0');
 weeks.forEach(w=>{
   if(w.review){
     const el=document.createElement('div');el.className='card gap';
+    const note=w.note||'No lecture module &mdash; review &amp; midterm week.';
+    const pill=w.pill||'Midterm';
     el.innerHTML=`<span class="wk">Week ${wk2(w.n)}</span>
       <h2>${w.t}</h2>
-      <div class="note">No lecture module &mdash; review &amp; midterm week.</div>
-      <div class="foot"><span class="pill gap">Midterm</span></div>`;
+      <div class="note">${note}</div>
+      <div class="foot"><span class="pill gap">${pill}</span></div>`;
     grid.appendChild(el);return;
   }
   if(w.ready){
